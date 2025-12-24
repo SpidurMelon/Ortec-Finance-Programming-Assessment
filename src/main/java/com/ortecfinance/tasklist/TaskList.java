@@ -23,6 +23,7 @@ public final class TaskList {
         }
     }
 
+    private final Map<Long, Task> tasksById = new LinkedHashMap<>();
     private final Map<String, List<Task>> tasks = new LinkedHashMap<>();
     private long lastId = 0;
 
@@ -43,8 +44,10 @@ public final class TaskList {
      */
     public void addTask(String project, String description) throws ProjectNotFoundException {
         if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
+        Task newTask = new Task(nextId(), description, false);
         List<Task> projectTasks = tasks.get(project);
-        projectTasks.add(new Task(nextId(), description, false));
+        projectTasks.add(newTask);
+        tasksById.put(newTask.getId(), newTask);
     }
 
     /**
@@ -103,15 +106,8 @@ public final class TaskList {
      * @see Task
      */
     private void setDone(long id, boolean done) throws TaskNotFoundException {
-        for (Map.Entry<String, List<Task>> project : tasks.entrySet()) {
-            for (Task task : project.getValue()) {
-                if (task.getId() == id) {
-                    task.setDone(done);
-                    return;
-                }
-            }
-        }
-        throw new TaskNotFoundException(id);
+        if (!tasksById.containsKey(id)) throw new TaskNotFoundException(id);
+        tasksById.get(id).setDone(done);
     }
 
     /**
