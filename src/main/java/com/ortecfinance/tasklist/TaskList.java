@@ -18,7 +18,7 @@ public final class TaskList {
         }
     }
     public static final class TaskNotFoundException extends Exception {
-        public TaskNotFoundException(int id) {
+        public TaskNotFoundException(long id) {
             super("Could not find a task with an ID of %d.".formatted(id));
         }
     }
@@ -81,7 +81,7 @@ public final class TaskList {
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    public void check(int id) throws TaskNotFoundException {
+    public void check(long id) throws TaskNotFoundException {
         setDone(id, true);
     }
 
@@ -91,7 +91,7 @@ public final class TaskList {
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    public void uncheck(int id) throws TaskNotFoundException {
+    public void uncheck(long id) throws TaskNotFoundException {
         setDone(id, false);
     }
 
@@ -102,7 +102,7 @@ public final class TaskList {
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    private void setDone(int id, boolean done) throws TaskNotFoundException {
+    private void setDone(long id, boolean done) throws TaskNotFoundException {
         for (Map.Entry<String, List<Task>> project : tasks.entrySet()) {
             for (Task task : project.getValue()) {
                 if (task.getId() == id) {

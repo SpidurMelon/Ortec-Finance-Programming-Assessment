@@ -89,7 +89,7 @@ public class TaskListCLI implements Runnable {
                 break;
             case "check":
                 try {
-                    int id = Integer.parseInt(commandRest[1]);
+                    long id = Long.parseLong(commandRest[1]);
                     taskList.check(id);
                 } catch (NumberFormatException e) {
                     out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
@@ -99,7 +99,7 @@ public class TaskListCLI implements Runnable {
                 break;
             case "uncheck":
                 try {
-                    int id = Integer.parseInt(commandRest[1]);
+                    long id = Long.parseLong(commandRest[1]);
                     taskList.uncheck(id);
                 } catch (NumberFormatException e) {
                     out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
