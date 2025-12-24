@@ -7,6 +7,14 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TaskListCLI is a command line interface to interact with a {@link TaskList}
+ * Can read from any BufferedReader and write to any PrintWriter.
+ * Uses System.in and System.out by default.
+ * @see BufferedReader
+ * @see PrintWriter
+ * @see TaskList
+ */
 public class TaskListCLI implements Runnable {
     private static final String QUIT = "quit";
 
@@ -36,10 +44,17 @@ public class TaskListCLI implements Runnable {
         );
     }
 
+    /**
+     * Creates and starts a new TaskListCLI with an empty {@link TaskList}
+     * @see TaskList
+     */
     public static void startConsole() {
         new TaskListCLI().run();
     }
 
+    /**
+     * Starts this TaskListCLI. It will start listening to commands.
+     */
     public void run() {
         out.println("Welcome to TaskList! Type 'help' for available commands.");
         while (true) {
@@ -58,6 +73,10 @@ public class TaskListCLI implements Runnable {
         }
     }
 
+    /**
+     * Executes a command
+     * @param commandLine A raw user-inputted string representing a command
+     */
     private void execute(String commandLine) {
         String[] commandRest = commandLine.split(" ", 2);
         String command = commandRest[0];
@@ -97,6 +116,10 @@ public class TaskListCLI implements Runnable {
         }
     }
 
+    /**
+     * Executes an "add" command to add either a project or task
+     * @param commandLine The arguments to a command starting with "add"
+     */
     private void add(String commandLine) {
         String[] subcommandRest = commandLine.split(" ", 2);
         String subcommand = subcommandRest[0];
@@ -112,6 +135,9 @@ public class TaskListCLI implements Runnable {
         }
     }
 
+    /**
+     * Prints all current projects and tasks to the output stream (usually the console)
+     */
     private void show() {
         for (Map.Entry<String, List<Task>> project : taskList.getProjects()) {
             out.println(project.getKey());
@@ -122,6 +148,9 @@ public class TaskListCLI implements Runnable {
         }
     }
 
+    /**
+     * Prints helpful information about the commands available to the output stream (usually the console)
+     */
     private void help() {
         out.println("Commands:");
         out.println("  show");
@@ -132,6 +161,10 @@ public class TaskListCLI implements Runnable {
         out.println();
     }
 
+    /**
+     * Prints a "command not found" error to the output stream (usually the console)
+     * @param command The unrecognized command
+     */
     private void error(String command) {
         out.printf("I don't know what the command \"%s\" is.", command);
         out.println();
