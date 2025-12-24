@@ -42,12 +42,13 @@ public final class TaskList {
      * @throws ProjectNotFoundException If the specified project does not exist in this TaskList
      * @see Task
      */
-    public void addTask(String project, String description) throws ProjectNotFoundException {
+    public long addTask(String project, String description) throws ProjectNotFoundException {
         if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
         Task newTask = new Task(nextId(), description, false);
         List<Task> projectTasks = tasks.get(project);
         projectTasks.add(newTask);
         tasksById.put(newTask.getId(), newTask);
+        return newTask.getId();
     }
 
     /**
