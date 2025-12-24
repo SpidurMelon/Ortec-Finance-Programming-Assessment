@@ -112,6 +112,18 @@ public final class TaskList {
     }
 
     /**
+     * Checks whether a certain task is marked as done
+     * @param id The task id
+     * @return True if the task is marked as done, false otherwise
+     * @throws TaskList.TaskNotFoundException If the task id is not found
+     * @see Task
+     */
+    public boolean isDone(long id) throws TaskList.TaskNotFoundException {
+        if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
+        return tasksById.get(id).isDone();
+    }
+
+    /**
      * Gets a unique id that can be used for new Tasks.
      * Guarantees uniqueness by incrementing each time this method is called.
      * @return A monotonically increasing id
