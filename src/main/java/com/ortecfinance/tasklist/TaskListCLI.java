@@ -70,14 +70,20 @@ public class TaskListCLI implements Runnable {
                 break;
             case "check":
                 try {
-                    taskList.check(commandRest[1]);
+                    int id = Integer.parseInt(commandRest[1]);
+                    taskList.check(id);
+                } catch (NumberFormatException e) {
+                    out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
                 } catch (TaskList.TaskNotFoundException e) {
                     out.println(e.getMessage());
                 }
                 break;
             case "uncheck":
                 try {
-                    taskList.uncheck(commandRest[1]);
+                    int id = Integer.parseInt(commandRest[1]);
+                    taskList.uncheck(id);
+                } catch (NumberFormatException e) {
+                    out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
                 } catch (TaskList.TaskNotFoundException e) {
                     out.println(e.getMessage());
                 }

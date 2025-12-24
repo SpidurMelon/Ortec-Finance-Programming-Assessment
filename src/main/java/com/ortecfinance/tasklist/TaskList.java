@@ -77,33 +77,32 @@ public final class TaskList {
 
     /**
      * Marks a task as done (completed)
-     * @param idString The task id as a string
+     * @param id The task id
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    public void check(String idString) throws TaskNotFoundException {
-        setDone(idString, true);
+    public void check(int id) throws TaskNotFoundException {
+        setDone(id, true);
     }
 
     /**
      * Marks a task as not done (not completed)
-     * @param idString The task id as a string
+     * @param id The task id
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    public void uncheck(String idString) throws TaskNotFoundException {
-        setDone(idString, false);
+    public void uncheck(int id) throws TaskNotFoundException {
+        setDone(id, false);
     }
 
     /**
      * Changes the "done" state of a Task
-     * @param idString The task id as a string
+     * @param id The task id
      * @param done The new "done" state of the Task
      * @throws TaskNotFoundException If the task id is not found
      * @see Task
      */
-    private void setDone(String idString, boolean done) throws TaskNotFoundException {
-        int id = Integer.parseInt(idString);
+    private void setDone(int id, boolean done) throws TaskNotFoundException {
         for (Map.Entry<String, List<Task>> project : tasks.entrySet()) {
             for (Task task : project.getValue()) {
                 if (task.getId() == id) {
