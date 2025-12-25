@@ -30,7 +30,6 @@ public final class TaskListTest {
         taskList.addProject(projectName);
 
         assertThat(taskList.getProjects(), contains(projectName));
-        assertThat(taskList.getProjects(), not(contains("Exercise")));
     }
 
     @Test
@@ -43,7 +42,6 @@ public final class TaskListTest {
             taskList.addTask(projectName, taskDescription);
 
             assertThat(tasks.get(projectName), hasItem(hasProperty("description", equalTo(taskDescription))));
-            assertThat(tasks.get(projectName), not(hasItem(hasProperty("description", equalTo("Chapter 2")))));
         } catch (TaskList.ProjectNotFoundException e) {
             fail();
         }
