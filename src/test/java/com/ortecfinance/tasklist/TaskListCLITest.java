@@ -8,7 +8,7 @@ import static java.lang.System.lineSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public final class ApplicationTest {
+public final class TaskListCLITest {
     public static final String PROMPT = "> ";
     private final PipedOutputStream inStream = new PipedOutputStream();
     private final PrintWriter inWriter = new PrintWriter(inStream, true);
@@ -18,7 +18,7 @@ public final class ApplicationTest {
 
     private Thread applicationThread;
 
-    public ApplicationTest() throws IOException {
+    public TaskListCLITest() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(new PipedInputStream(inStream)));
         PrintWriter out = new PrintWriter(new PipedOutputStream(outStream), true);
         TaskListCLI taskList = new TaskListCLI(in, out);
