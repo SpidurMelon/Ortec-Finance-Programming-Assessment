@@ -8,8 +8,7 @@ import java.util.*;
 
 /**
  * A TaskList is a data structure representing a To-Do list of projects.
- * Projects are uniquely identified by their name and are further subdivided into {@link Task}s.
- * @see Task
+ * Projects are uniquely identified by their name and are further subdivided into tasks.
  */
 public final class TaskList {
     public static final class ProjectNotFoundException extends Exception {
@@ -23,9 +22,18 @@ public final class TaskList {
         }
     }
 
-    private final Map<Long, Task> tasksById = new LinkedHashMap<>();
-    private final Map<String, List<Task>> tasks = new LinkedHashMap<>();
+    private final Map<Long, Task> tasksById;
+    private final Map<String, List<Task>> tasks;
     private long lastId = 0;
+
+    public TaskList() {
+        this(new LinkedHashMap<>(), new LinkedHashMap<>());
+    }
+
+    public TaskList(Map<Long, Task> tasksById, Map<String, List<Task>> tasks) {
+        this.tasksById = tasksById;
+        this.tasks = tasks;
+    }
 
     /**
      * Adds a project to the TaskList
@@ -40,7 +48,6 @@ public final class TaskList {
      * @param project The project to add a task to
      * @param description The description of the task
      * @throws ProjectNotFoundException If the specified project does not exist in this TaskList
-     * @see Task
      */
     public long addTask(String project, String description) throws ProjectNotFoundException {
         if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
@@ -52,38 +59,46 @@ public final class TaskList {
     }
 
     /**
-     * @return A set of all projects, along with their tasks
-     * @see Task
-     */
-    public Set<Map.Entry<String, List<Task>>> getProjects() {
-        return tasks.entrySet();
-    }
-
-
-    /**
      * @return A set of all projects
      */
-    public Set<String> getProjectNames() {
+    public Set<String> getProjects() {
         return tasks.keySet();
     }
 
     /**
-     * Gets the tasks of a specified project
+     * Gets the task ids linked to a specified project.
      * @param project The name of the project
-     * @return A list containing all tasks of the project
+     * @return A list containing all task ids linked to the project
      * @throws ProjectNotFoundException If the specified project does not exist in this TaskList
-     * @see Task
+     * @see #getTaskDescription(long)
+     * @see #check(long)
+     * @see #uncheck(long)
+     * @see #isDone(long)
      */
-    public List<Task> getTasks(String project) throws ProjectNotFoundException {
+    public List<Long> getTasks(String project) throws ProjectNotFoundException {
         if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
-        return tasks.get(project);
+        return tasks.get(project)
+                .stream()
+                .mapToLong(Task::getId)
+                .boxed()
+                .toList();
+    }
+
+    /**
+     * @param id The task id
+     * @return The description of the specified task
+     */
+    public String getTaskDescription(long id) throws TaskNotFoundException {
+        if (!tasksById.containsKey(id)) throw new TaskNotFoundException(id);
+        return tasksById.get(id).getDescription();
     }
 
     /**
      * Marks a task as done (completed)
      * @param id The task id
      * @throws TaskNotFoundException If the task id is not found
-     * @see Task
+     * @see #uncheck(long)
+     * @see #isDone(long)
      */
     public void check(long id) throws TaskNotFoundException {
         setDone(id, true);
@@ -93,7 +108,8 @@ public final class TaskList {
      * Marks a task as not done (not completed)
      * @param id The task id
      * @throws TaskNotFoundException If the task id is not found
-     * @see Task
+     * @see #check(long)
+     * @see #isDone(long)
      */
     public void uncheck(long id) throws TaskNotFoundException {
         setDone(id, false);
@@ -104,7 +120,7 @@ public final class TaskList {
      * @param id The task id
      * @param done The new "done" state of the Task
      * @throws TaskNotFoundException If the task id is not found
-     * @see Task
+     * @see #isDone(long)
      */
     private void setDone(long id, boolean done) throws TaskNotFoundException {
         if (!tasksById.containsKey(id)) throw new TaskNotFoundException(id);
@@ -116,7 +132,8 @@ public final class TaskList {
      * @param id The task id
      * @return True if the task is marked as done, false otherwise
      * @throws TaskList.TaskNotFoundException If the task id is not found
-     * @see Task
+     * @see #check(long) 
+     * @see #uncheck(long)
      */
     public boolean isDone(long id) throws TaskList.TaskNotFoundException {
         if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);

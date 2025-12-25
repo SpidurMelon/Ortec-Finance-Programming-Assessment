@@ -139,12 +139,20 @@ public class TaskListCLI implements Runnable {
      * Prints all current projects and tasks to the output stream (usually the console)
      */
     private void show() {
-        for (Map.Entry<String, List<Task>> project : taskList.getProjects()) {
-            out.println(project.getKey());
-            for (Task task : project.getValue()) {
-                out.printf("    [%c] %d: %s%n", (task.isDone() ? 'x' : ' '), task.getId(), task.getDescription());
+        try {
+            for (String project : taskList.getProjects()) {
+                out.println(project);
+                for (Long taskId : taskList.getTasks(project)) {
+                    out.printf("    [%c] %d: %s%n", (taskList.isDone(taskId) ? 'x' : ' '), taskId, taskList.getTaskDescription(taskId));
+                }
+                out.println();
             }
-            out.println();
+        } catch (TaskList.ProjectNotFoundException e) {
+            throw new RuntimeException("TaskList.getProjects() listed a project that doesnt exist." +
+                    "This should never happen.", e);
+        } catch (TaskList.TaskNotFoundException e) {
+            throw new RuntimeException("TaskList.getTasks(project) listed a task that doesnt exist." +
+                    "This should never happen.", e);
         }
     }
 

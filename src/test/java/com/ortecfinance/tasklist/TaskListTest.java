@@ -2,6 +2,7 @@ package com.ortecfinance.tasklist;
 
 import org.junit.jupiter.api.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,10 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public final class TaskListTest {
 
     private TaskList taskList;
+    private Map<Long, Task> tasksById;
+    private Map<String, List<Task>> tasks;
 
     @BeforeEach
     void constructTaskList() {
-        taskList = new TaskList();
+        tasksById = new LinkedHashMap<>();
+        tasks = new LinkedHashMap<>();
+        taskList = new TaskList(tasksById, tasks);
     }
 
     @Test
@@ -24,8 +29,8 @@ public final class TaskListTest {
 
         taskList.addProject(projectName);
 
-        assertThat(taskList.getProjectNames(), contains(projectName));
-        assertThat(taskList.getProjectNames(), not(contains("Exercise")));
+        assertThat(taskList.getProjects(), contains(projectName));
+        assertThat(taskList.getProjects(), not(contains("Exercise")));
     }
 
     @Test
@@ -37,8 +42,8 @@ public final class TaskListTest {
             taskList.addProject(projectName);
             taskList.addTask(projectName, taskDescription);
 
-            assertThat(taskList.getTasks(projectName), hasItem(hasProperty("description", equalTo(taskDescription))));
-            assertThat(taskList.getTasks(projectName), not(hasItem(hasProperty("description", equalTo("Chapter 2")))));
+            assertThat(tasks.get(projectName), hasItem(hasProperty("description", equalTo(taskDescription))));
+            assertThat(tasks.get(projectName), not(hasItem(hasProperty("description", equalTo("Chapter 2")))));
         } catch (TaskList.ProjectNotFoundException e) {
             fail();
         }
