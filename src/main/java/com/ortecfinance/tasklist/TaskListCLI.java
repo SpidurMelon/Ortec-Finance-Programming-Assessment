@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -88,19 +91,13 @@ public class TaskListCLI implements Runnable {
                 add(commandRest[1]);
                 break;
             case "check":
-                try {
-                    long id = Long.parseLong(commandRest[1]);
-                    taskList.check(id);
-                } catch (NumberFormatException e) {
-                    out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
-                } catch (TaskList.TaskNotFoundException e) {
-                    out.println(e.getMessage());
-                }
-                break;
             case "uncheck":
+            case "deadline":
                 try {
-                    long id = Long.parseLong(commandRest[1]);
-                    taskList.uncheck(id);
+                    String[] splitCommand = commandLine.split(" ", 3);
+                    long taskId = Long.parseLong(splitCommand[1]);
+                    String args = (splitCommand.length == 2 ? "" : splitCommand[2]);
+                    taskCommand(command, taskId, args);
                 } catch (NumberFormatException e) {
                     out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
                 } catch (TaskList.TaskNotFoundException e) {
@@ -136,6 +133,32 @@ public class TaskListCLI implements Runnable {
     }
 
     /**
+     * A convenience method for commands that modify tasks
+     * @param command The base command (check, uncheck, deadline, etc.)
+     * @param taskId The task id
+     * @param args The arguments after the id
+     * @throws TaskList.TaskNotFoundException If the taskList does not contain a task with the given id
+     */
+    private void taskCommand(String command, long taskId, String args) throws TaskList.TaskNotFoundException {
+        switch (command) {
+            case "check":
+                taskList.check(taskId);
+                break;
+            case "uncheck":
+                taskList.uncheck(taskId);
+                break;
+            case "deadline":
+                try {
+                    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                    taskList.setDeadline(taskId, LocalDate.parse(args, dateFormat));
+                } catch (DateTimeParseException e) {
+                    out.println(e.getMessage());
+                }
+                break;
+        }
+    }
+
+    /**
      * Prints all current projects and tasks to the output stream (usually the console)
      */
     private void show() {
@@ -166,6 +189,7 @@ public class TaskListCLI implements Runnable {
         out.println("  add task <project name> <task description>");
         out.println("  check <task ID>");
         out.println("  uncheck <task ID>");
+        out.println("  deadline <task ID> <DD-MM-YYYY>");
         out.println();
     }
 

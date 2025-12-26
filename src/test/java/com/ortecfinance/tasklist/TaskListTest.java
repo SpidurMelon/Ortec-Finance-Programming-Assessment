@@ -2,6 +2,7 @@ package com.ortecfinance.tasklist;
 
 import org.junit.jupiter.api.*;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,23 @@ public final class TaskListTest {
             assertThat(taskList.isDone(task2Id), is(false));
             assertThat(taskList.isDone(task3Id), is(true));
             assertThat(taskList.isDone(task4Id), is(false));
+        } catch (TaskList.ProjectNotFoundException | TaskList.TaskNotFoundException e) {
+            fail();
+        }
+    }
+
+    @Test
+    void simpleDeadlineTest() {
+        try {
+            final String projectName = "Book";
+            final String taskDescription = "Chapter 1";
+            final LocalDate deadline = LocalDate.of(2025, 12, 25);
+
+            taskList.addProject(projectName);
+            long taskId = taskList.addTask(projectName, taskDescription);
+            taskList.setDeadline(taskId, deadline);
+
+            assertThat(tasksById.get(taskId).getDeadline(), is(deadline));
         } catch (TaskList.ProjectNotFoundException | TaskList.TaskNotFoundException e) {
             fail();
         }

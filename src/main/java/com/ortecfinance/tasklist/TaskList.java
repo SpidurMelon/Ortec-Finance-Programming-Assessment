@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -138,6 +139,28 @@ public final class TaskList {
     public boolean isDone(long id) throws TaskList.TaskNotFoundException {
         if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
         return tasksById.get(id).isDone();
+    }
+
+    /**
+     * Sets the deadline of a specified task
+     * @param id The task id
+     * @param deadline The day on which this task has to be completed
+     * @throws TaskList.TaskNotFoundException If the task id is not found
+     */
+    public void setDeadline(long id, LocalDate deadline) throws TaskNotFoundException {
+        if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
+        tasksById.get(id).setDeadline(deadline);
+    }
+
+    /**
+     * Gets the deadline of a specified task
+     * @param id The task id
+     * @return The day on which this task has to be completed. Or null if there is no deadline.
+     * @throws TaskList.TaskNotFoundException If the task id is not found
+     */
+    public LocalDate getDeadline(long id) throws TaskNotFoundException {
+        if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
+        return tasksById.get(id).getDeadline();
     }
 
     /**
