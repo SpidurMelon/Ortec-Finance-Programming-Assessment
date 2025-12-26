@@ -36,9 +36,10 @@ public final class TaskList {
         this(
             tasksById,
             tasks,
-            new TreeMap<>((date1, date2) ->
-                    date2.isEqual(date1) ? 0 : (date2.isAfter(date1) ? 1 : -1)
-            )
+            new TreeMap<>(Comparator.nullsLast(
+                    (date1, date2) ->
+                            date1.isEqual(date2) ? 0 : (date1.isAfter(date2) ? 1 : -1)
+            ))
         );
     }
 
@@ -68,6 +69,11 @@ public final class TaskList {
         List<Task> projectTasks = tasks.get(project);
         projectTasks.add(newTask);
         tasksById.put(newTask.getId(), newTask);
+        try {
+            setDeadline(newTask.getId(), null);
+        } catch (TaskNotFoundException e) {
+            throw new RuntimeException("A newly added Task was not found by setDeadline(). This should never happen.", e);
+        }
         return newTask.getId();
     }
 
@@ -161,20 +167,20 @@ public final class TaskList {
      */
     public void setDeadline(long id, LocalDate deadline) throws TaskNotFoundException {
         if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
-        if (!tasksByDeadline.containsKey(deadline)) tasksByDeadline.put(deadline, new ArrayList<>());
         Task task = tasksById.get(id);
 
-        // Remove the task from its old place in tasksByDeadline
+        // Remove the task from its old place in tasksByDeadline (if applicable)
         LocalDate oldDeadline = task.getDeadline();
-        if (oldDeadline != null) {
-            List<Task> oldSharedDeadlines = tasksByDeadline.get(deadline);
+        if (tasksByDeadline.containsKey(oldDeadline) && tasksByDeadline.get(oldDeadline).contains(task)) {
+            List<Task> oldSharedDeadlines = tasksByDeadline.get(oldDeadline);
             oldSharedDeadlines.remove(task);
             // If the old deadline now has no tasks, remove the list altogether
-            if (oldSharedDeadlines.isEmpty()) tasksByDeadline.remove(deadline);
+            if (oldSharedDeadlines.isEmpty()) tasksByDeadline.remove(oldDeadline);
         }
 
         // Add the task to its new place in tasksByDeadline
         task.setDeadline(deadline);
+        if (!tasksByDeadline.containsKey(deadline)) tasksByDeadline.put(deadline, new ArrayList<>());
         tasksByDeadline.get(deadline).add(task);
     }
 
