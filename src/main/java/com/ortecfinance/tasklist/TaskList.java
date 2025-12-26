@@ -196,6 +196,24 @@ public final class TaskList {
     }
 
     /**
+     * Generates a new map containing all task ids in order of their deadline
+     * @return A map containing all task ids in order of deadline
+     */
+    public SequencedMap<LocalDate, List<Long>> getDeadlines() {
+        LinkedHashMap<LocalDate, List<Long>> result = new LinkedHashMap<>();
+        for (LocalDate date : tasksByDeadline.navigableKeySet()) {
+            result.put(date,
+                    tasksByDeadline.get(date)
+                            .stream()
+                            .mapToLong(Task::getId)
+                            .boxed()
+                            .toList()
+            );
+        }
+        return result;
+    }
+
+    /**
      * Gets a unique id that can be used for new Tasks.
      * Guarantees uniqueness by incrementing each time this method is called.
      * @return A monotonically increasing id

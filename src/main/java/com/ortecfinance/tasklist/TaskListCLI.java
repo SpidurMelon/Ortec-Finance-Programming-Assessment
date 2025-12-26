@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedMap;
 
 /**
  * TaskListCLI is a command line interface to interact with a {@link TaskList}
@@ -19,6 +20,7 @@ import java.util.Map;
  * @see TaskList
  */
 public class TaskListCLI implements Runnable {
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final String QUIT = "quit";
 
     private final BufferedReader in;
@@ -104,6 +106,9 @@ public class TaskListCLI implements Runnable {
                     out.println(e.getMessage());
                 }
                 break;
+            case "view-by-deadline":
+                viewByDeadline();
+                break;
             case "help":
                 help();
                 break;
@@ -149,8 +154,7 @@ public class TaskListCLI implements Runnable {
                 break;
             case "deadline":
                 try {
-                    DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-                    taskList.setDeadline(taskId, LocalDate.parse(args, dateFormat));
+                    taskList.setDeadline(taskId, LocalDate.parse(args, DATE_FORMATTER));
                 } catch (DateTimeParseException e) {
                     out.println(e.getMessage());
                 }
@@ -179,6 +183,25 @@ public class TaskListCLI implements Runnable {
         }
     }
 
+    private void viewByDeadline() {
+        try {
+            SequencedMap<LocalDate, List<Long>> deadlines = taskList.getDeadlines();
+            for (LocalDate deadline : deadlines.sequencedKeySet()) {
+                String dateString;
+                if (deadline != null) dateString = deadline.format(DATE_FORMATTER) + ":";
+                else dateString = "No deadline:";
+                out.println(dateString);
+                for (Long taskId : deadlines.get(deadline)) {
+                    out.printf("       %d: %s%n", taskId, taskList.getTaskDescription(taskId));
+                }
+                out.println();
+            }
+        } catch (TaskList.TaskNotFoundException e) {
+            throw new RuntimeException("TaskList.getDeadlines() listed a task that doesnt exist." +
+                    "This should never happen.", e);
+        }
+    }
+
     /**
      * Prints helpful information about the commands available to the output stream (usually the console)
      */
@@ -190,6 +213,7 @@ public class TaskListCLI implements Runnable {
         out.println("  check <task ID>");
         out.println("  uncheck <task ID>");
         out.println("  deadline <task ID> <DD-MM-YYYY>");
+        out.println("  view-by-deadline");
         out.println();
     }
 
