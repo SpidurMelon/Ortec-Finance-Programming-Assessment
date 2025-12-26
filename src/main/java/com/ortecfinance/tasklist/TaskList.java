@@ -25,6 +25,7 @@ public final class TaskList {
 
     private final Map<Long, Task> tasksById;
     private final Map<String, List<Task>> tasks;
+    private final TreeMap<LocalDate, List<Task>> tasksByDeadline;
     private long lastId = 0;
 
     public TaskList() {
@@ -32,8 +33,19 @@ public final class TaskList {
     }
 
     public TaskList(Map<Long, Task> tasksById, Map<String, List<Task>> tasks) {
+        this(
+            tasksById,
+            tasks,
+            new TreeMap<>((date1, date2) ->
+                    date2.isEqual(date1) ? 0 : (date2.isAfter(date1) ? 1 : -1)
+            )
+        );
+    }
+
+    public TaskList(Map<Long, Task> tasksById, Map<String, List<Task>> tasks, TreeMap<LocalDate, List<Task>> tasksByDeadline) {
         this.tasksById = tasksById;
         this.tasks = tasks;
+        this.tasksByDeadline = tasksByDeadline;
     }
 
     /**
@@ -149,7 +161,21 @@ public final class TaskList {
      */
     public void setDeadline(long id, LocalDate deadline) throws TaskNotFoundException {
         if (!tasksById.containsKey(id)) throw new TaskList.TaskNotFoundException(id);
-        tasksById.get(id).setDeadline(deadline);
+        if (!tasksByDeadline.containsKey(deadline)) tasksByDeadline.put(deadline, new ArrayList<>());
+        Task task = tasksById.get(id);
+
+        // Remove the task from its old place in tasksByDeadline
+        LocalDate oldDeadline = task.getDeadline();
+        if (oldDeadline != null) {
+            List<Task> oldSharedDeadlines = tasksByDeadline.get(deadline);
+            oldSharedDeadlines.remove(task);
+            // If the old deadline now has no tasks, remove the list altogether
+            if (oldSharedDeadlines.isEmpty()) tasksByDeadline.remove(deadline);
+        }
+
+        // Add the task to its new place in tasksByDeadline
+        task.setDeadline(deadline);
+        tasksByDeadline.get(deadline).add(task);
     }
 
     /**

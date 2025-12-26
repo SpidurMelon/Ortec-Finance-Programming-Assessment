@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -16,12 +17,20 @@ public final class TaskListTest {
     private TaskList taskList;
     private Map<Long, Task> tasksById;
     private Map<String, List<Task>> tasks;
+    private TreeMap<LocalDate, List<Task>> tasksByDeadline;
 
     @BeforeEach
     void constructTaskList() {
         tasksById = new LinkedHashMap<>();
         tasks = new LinkedHashMap<>();
-        taskList = new TaskList(tasksById, tasks);
+        tasksByDeadline = new TreeMap<>((LocalDate date1, LocalDate date2) ->
+                date1.isEqual(date2) ? 0 : (date1.isAfter(date2) ? 1 : -1)
+        );
+        taskList = new TaskList(
+                tasksById,
+                tasks,
+                tasksByDeadline
+        );
     }
 
     @Test
@@ -116,6 +125,38 @@ public final class TaskListTest {
             taskList.setDeadline(taskId, deadline);
 
             assertThat(tasksById.get(taskId).getDeadline(), is(deadline));
+        } catch (TaskList.ProjectNotFoundException | TaskList.TaskNotFoundException e) {
+            fail();
+        }
+    }
+
+    @Test
+    void simpleDeadlineOrderingTest() {
+        try {
+            final String projectName = "Book";
+            final String task1Description = "Chapter 1";
+            final String task2Description = "Chapter 2";
+            final String task3Description = "Prologue";
+            final LocalDate deadline1 = LocalDate.of(2025, 12, 25);
+            final LocalDate deadline2 = LocalDate.of(2026, 12, 25);
+            final LocalDate deadline3 = LocalDate.of(2024, 12, 25);
+
+            taskList.addProject(projectName);
+            long task1Id = taskList.addTask(projectName, task1Description);
+            long task2Id = taskList.addTask(projectName, task2Description);
+            long task3Id = taskList.addTask(projectName, task3Description);
+            taskList.setDeadline(task1Id, deadline1);
+            taskList.setDeadline(task2Id, deadline2);
+            taskList.setDeadline(task3Id, deadline3);
+
+            assertThat(tasksByDeadline.get(deadline1).size(), is(1));
+            assertThat(tasksByDeadline.get(deadline2).size(), is(1));
+            assertThat(tasksByDeadline.get(deadline3).size(), is(1));
+            assertThat(tasksByDeadline.values(), containsInRelativeOrder(
+                    contains(tasksById.get(task3Id)),
+                    contains(tasksById.get(task1Id)),
+                    contains(tasksById.get(task2Id))
+                    ));
         } catch (TaskList.ProjectNotFoundException | TaskList.TaskNotFoundException e) {
             fail();
         }
