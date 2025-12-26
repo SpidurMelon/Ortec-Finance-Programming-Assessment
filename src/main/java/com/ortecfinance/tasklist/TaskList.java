@@ -98,8 +98,7 @@ public final class TaskList {
         if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
         return tasks.get(project)
                 .stream()
-                .mapToLong(Task::getId)
-                .boxed()
+                .map(Task::getId)
                 .toList();
     }
 
@@ -205,8 +204,7 @@ public final class TaskList {
             result.put(date,
                     tasksByDeadline.get(date)
                             .stream()
-                            .mapToLong(Task::getId)
-                            .boxed()
+                            .map(Task::getId)
                             .toList()
             );
         }
