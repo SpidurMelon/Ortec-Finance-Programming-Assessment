@@ -23,8 +23,8 @@ public final class TaskList {
         }
     }
 
+    private final Map<String, Project> projects;
     private final Map<Long, Task> tasksById;
-    private final Map<String, List<Task>> tasks;
     private final TreeMap<LocalDate, List<Task>> tasksByDeadline;
     private long lastId = 0;
 
@@ -32,20 +32,20 @@ public final class TaskList {
         this(new LinkedHashMap<>(), new LinkedHashMap<>());
     }
 
-    public TaskList(Map<Long, Task> tasksById, Map<String, List<Task>> tasks) {
+    public TaskList(Map<String, Project> projects, Map<Long, Task> tasksById) {
         this(
-            tasksById,
-            tasks,
-            new TreeMap<>(Comparator.nullsLast(
-                    (date1, date2) ->
-                            date1.isEqual(date2) ? 0 : (date1.isAfter(date2) ? 1 : -1)
-            ))
+                projects,
+                tasksById,
+                new TreeMap<>(Comparator.nullsLast(
+                        (date1, date2) ->
+                                date1.isEqual(date2) ? 0 : (date1.isAfter(date2) ? 1 : -1)
+                ))
         );
     }
 
-    public TaskList(Map<Long, Task> tasksById, Map<String, List<Task>> tasks, TreeMap<LocalDate, List<Task>> tasksByDeadline) {
+    public TaskList(Map<String, Project> projects, Map<Long, Task> tasksById, TreeMap<LocalDate, List<Task>> tasksByDeadline) {
         this.tasksById = tasksById;
-        this.tasks = tasks;
+        this.projects = projects;
         this.tasksByDeadline = tasksByDeadline;
     }
 
@@ -54,7 +54,14 @@ public final class TaskList {
      * @param name The name of the project to be added
      */
     public void addProject(String name) {
-        tasks.put(name, new ArrayList<Task>());
+        projects.put(name, new Project(name));
+    }
+
+    /**
+     * @return A set of all projects
+     */
+    public Set<String> getProjects() {
+        return projects.keySet();
     }
 
     /**
@@ -64,10 +71,10 @@ public final class TaskList {
      * @throws ProjectNotFoundException If the specified project does not exist in this TaskList
      */
     public long addTask(String project, String description) throws ProjectNotFoundException {
-        if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
+        if (!projects.containsKey(project)) throw new ProjectNotFoundException(project);
         Task newTask = new Task(nextId(), description, false);
-        List<Task> projectTasks = tasks.get(project);
-        projectTasks.add(newTask);
+        Project projectObj = projects.get(project);
+        projectObj.addTask(newTask.getId());
         tasksById.put(newTask.getId(), newTask);
         try {
             setDeadline(newTask.getId(), null);
@@ -75,13 +82,6 @@ public final class TaskList {
             throw new RuntimeException("A newly added Task was not found by setDeadline(). This should never happen.", e);
         }
         return newTask.getId();
-    }
-
-    /**
-     * @return A set of all projects
-     */
-    public Set<String> getProjects() {
-        return tasks.keySet();
     }
 
     /**
@@ -95,11 +95,8 @@ public final class TaskList {
      * @see #isDone(long)
      */
     public List<Long> getTasks(String project) throws ProjectNotFoundException {
-        if (!tasks.containsKey(project)) throw new ProjectNotFoundException(project);
-        return tasks.get(project)
-                .stream()
-                .map(Task::getId)
-                .toList();
+        if (!projects.containsKey(project)) throw new ProjectNotFoundException(project);
+        return projects.get(project).getTasks();
     }
 
     /**

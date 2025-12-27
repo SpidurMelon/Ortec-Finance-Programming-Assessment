@@ -12,21 +12,21 @@ import static org.junit.jupiter.api.Assertions.*;
 public final class TaskListTest {
 
     private TaskList taskList;
+    private Map<String, Project> projects;
     private Map<Long, Task> tasksById;
-    private Map<String, List<Task>> tasks;
     private TreeMap<LocalDate, List<Task>> tasksByDeadline;
 
     @BeforeEach
     void constructTaskList() {
+        projects = new LinkedHashMap<>();
         tasksById = new LinkedHashMap<>();
-        tasks = new LinkedHashMap<>();
         tasksByDeadline = new TreeMap<>(Comparator.nullsLast(
                 (date1, date2) ->
                         date1.isEqual(date2) ? 0 : (date1.isAfter(date2) ? 1 : -1)
         ));
         taskList = new TaskList(
+                projects,
                 tasksById,
-                tasks,
                 tasksByDeadline
         );
     }
@@ -47,11 +47,13 @@ public final class TaskListTest {
             final String taskDescription = "Chapter 1";
 
             taskList.addProject(projectName);
-            taskList.addTask(projectName, taskDescription);
+            long taskId = taskList.addTask(projectName, taskDescription);
 
-            assertThat(tasks.get(projectName), hasItem(hasProperty("description", equalTo(taskDescription))));
+            assertThat(taskList.getTaskDescription(taskId), is(taskDescription));
         } catch (TaskList.ProjectNotFoundException e) {
             fail();
+        } catch (TaskList.TaskNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
