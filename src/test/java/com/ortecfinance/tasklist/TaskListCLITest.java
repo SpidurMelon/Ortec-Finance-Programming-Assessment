@@ -8,7 +8,7 @@ import static java.lang.System.lineSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public final class ApplicationTest {
+public final class TaskListCLITest {
     public static final String PROMPT = "> ";
     private final PipedOutputStream inStream = new PipedOutputStream();
     private final PrintWriter inWriter = new PrintWriter(inStream, true);
@@ -18,10 +18,10 @@ public final class ApplicationTest {
 
     private Thread applicationThread;
 
-    public ApplicationTest() throws IOException {
+    public TaskListCLITest() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(new PipedInputStream(inStream)));
         PrintWriter out = new PrintWriter(new PipedOutputStream(outStream), true);
-        TaskList taskList = new TaskList(in, out);
+        TaskListCLI taskList = new TaskListCLI(in, out);
         applicationThread = new Thread(taskList);
     }
 
@@ -89,6 +89,45 @@ public final class ApplicationTest {
                 "    [ ] 7: Outside-In TDD",
                 "    [ ] 8: Interaction-Driven Design",
                 ""
+        );
+
+        execute("quit");
+    }
+
+    @Test
+    void deadlineTest() throws IOException {
+        execute("add project secrets");
+        execute("add task secrets Eat more donuts.");
+        execute("add task secrets Destroy all humans.");
+
+        execute("add project training");
+        execute("add task training Four Elements of Simple Design");
+        execute("add task training SOLID");
+        execute("add task training Coupling and Cohesion");
+        execute("add task training Primitive Obsession");
+        execute("add task training Outside-In TDD");
+        execute("add task training Interaction-Driven Design");
+
+        execute("deadline 1 11-11-2021");
+        execute("deadline 4 11-11-2021");
+        execute("deadline 3 13-11-2021");
+
+        execute("view-by-deadline");
+        readLines(
+                "11-11-2021:",
+                        "       1: Eat more donuts.",
+                        "       4: SOLID",
+                        "",
+                        "13-11-2021:",
+                        "       3: Four Elements of Simple Design",
+                        "",
+                        "No deadline:",
+                        "       2: Destroy all humans.",
+                        "       5: Coupling and Cohesion",
+                        "       6: Primitive Obsession",
+                        "       7: Outside-In TDD",
+                        "       8: Interaction-Driven Design",
+                        ""
         );
 
         execute("quit");

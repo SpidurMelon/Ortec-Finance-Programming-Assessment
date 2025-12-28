@@ -1,17 +1,30 @@
 package com.ortecfinance.tasklist;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.SequencedSet;
 
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("/projects")
 public class TaskController {
 
+    private final TaskList taskList;
+
+    public TaskController(TaskList taskList) {
+        this.taskList = taskList;
+    }
+
+    @PostMapping
+    public String addProject(@RequestBody String project) {
+        taskList.addProject(project);
+        return "Added %s".formatted(project);
+    }
+
     @GetMapping
-    public List<String> getTasks() {
-        return Arrays.asList("Task 1", "Task 2", "Task 3");
+    public SequencedSet<String> getProjects() {
+        return taskList.getProjects();
     }
 }

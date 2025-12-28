@@ -9,11 +9,11 @@ public class TaskListApplication {
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Starting console Application");
-            TaskList.startConsole();
+            TaskListCLI.startConsole();
         }
         else {
             SpringApplication.run(TaskListApplication.class, args);
-            System.out.println("localhost:8080/tasks");
+            System.out.println("localhost:8080/projects");
         }
     }
 
