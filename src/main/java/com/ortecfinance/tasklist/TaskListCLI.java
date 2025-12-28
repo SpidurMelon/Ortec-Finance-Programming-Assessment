@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Map;
 import java.util.SequencedMap;
 
 /**
@@ -27,11 +26,14 @@ public class TaskListCLI implements Runnable {
     private final PrintWriter out;
 
     private final TaskList taskList;
+    private final CommandParser commandParser;
 
     public TaskListCLI(BufferedReader reader, PrintWriter writer, TaskList taskList) {
         this.in = reader;
         this.out = writer;
         this.taskList = taskList;
+        commandParser = new CommandParser();
+        initializeCommands();
     }
 
     public TaskListCLI(BufferedReader reader, PrintWriter writer) {
@@ -47,6 +49,21 @@ public class TaskListCLI implements Runnable {
                 new BufferedReader(new InputStreamReader(System.in)),
                 new PrintWriter(System.out)
         );
+    }
+
+    /**
+     * Registers all commands to the {@link CommandParser}
+     * Should only be called once
+     */
+    public void initializeCommands() {
+        commandParser.registerCommand(new Command("help"), this::help);
+        commandParser.registerCommand(new Command("show"), this::show);
+        commandParser.registerCommand(new Command("add project", List.of("project name")), this::addProject);
+        commandParser.registerCommand(new Command("add task", List.of("project name", "task description"), true), this::addTask);
+        commandParser.registerCommand(new Command("check", List.of("task ID")), this::check);
+        commandParser.registerCommand(new Command("uncheck", List.of("task ID")), this::uncheck);
+        commandParser.registerCommand(new Command("deadline", List.of("task ID", "DD-MM-YYYY")), this::deadline);
+        commandParser.registerCommand(new Command("view-by-deadline"), this::viewByDeadline);
     }
 
     /**
@@ -83,89 +100,29 @@ public class TaskListCLI implements Runnable {
      * @param commandLine A raw user-inputted string representing a command
      */
     private void execute(String commandLine) {
-        String[] commandRest = commandLine.split(" ", 2);
-        String command = commandRest[0];
-        switch (command) {
-            case "show":
-                show();
-                break;
-            case "add":
-                add(commandRest[1]);
-                break;
-            case "check":
-            case "uncheck":
-            case "deadline":
-                try {
-                    String[] splitCommand = commandLine.split(" ", 3);
-                    long taskId = Long.parseLong(splitCommand[1]);
-                    String args = (splitCommand.length == 2 ? "" : splitCommand[2]);
-                    taskCommand(command, taskId, args);
-                } catch (NumberFormatException e) {
-                    out.println("Task ID \"%s\" is not a valid number".formatted(commandRest[1]));
-                } catch (TaskList.TaskNotFoundException e) {
-                    out.println(e.getMessage());
-                }
-                break;
-            case "view-by-deadline":
-                viewByDeadline();
-                break;
-            case "help":
-                help();
-                break;
-            default:
-                error(command);
-                break;
-        }
-    }
-
-    /**
-     * Executes an "add" command to add either a project or task
-     * @param commandLine The arguments to a command starting with "add"
-     */
-    private void add(String commandLine) {
-        String[] subcommandRest = commandLine.split(" ", 2);
-        String subcommand = subcommandRest[0];
-        if (subcommand.equals("project")) {
-            taskList.addProject(subcommandRest[1]);
-        } else if (subcommand.equals("task")) {
-            String[] projectTask = subcommandRest[1].split(" ", 2);
-            try {
-                taskList.addTask(projectTask[0], projectTask[1]);
-            } catch (TaskList.ProjectNotFoundException e) {
-                out.println(e.getMessage());
+        try {
+            boolean foundCommand = commandParser.parseAndExecute(commandLine);
+            if (!foundCommand) {
+                error(commandLine);
             }
+        } catch (Command.ExcessArgumentsException | Command.LackingArgumentsException e) {
+            out.println(e.getMessage());
         }
     }
 
     /**
-     * A convenience method for commands that modify tasks
-     * @param command The base command (check, uncheck, deadline, etc.)
-     * @param taskId The task id
-     * @param args The arguments after the id
-     * @throws TaskList.TaskNotFoundException If the taskList does not contain a task with the given id
+     * Prints helpful information about the commands available to the output stream (usually the console)
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
      */
-    private void taskCommand(String command, long taskId, String args) throws TaskList.TaskNotFoundException {
-        switch (command) {
-            case "check":
-                taskList.check(taskId);
-                break;
-            case "uncheck":
-                taskList.uncheck(taskId);
-                break;
-            case "deadline":
-                try {
-                    taskList.setDeadline(taskId, LocalDate.parse(args, DATE_FORMATTER));
-                } catch (DateTimeParseException e) {
-                    out.println(e.getMessage());
-                }
-                break;
-        }
+    private void help(List<String> args) {
+        out.println(commandParser.getHelpString());
     }
 
     /**
      * Prints all current projects and tasks to the output stream (usually the console)
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
      */
-    private void show() {
+    private void show(List<String> args) {
         try {
             for (String project : taskList.getProjects()) {
                 out.println(project);
@@ -183,7 +140,79 @@ public class TaskListCLI implements Runnable {
         }
     }
 
-    private void viewByDeadline() {
+    /**
+     * Adds a project
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void addProject(List<String> args) {
+        taskList.addProject(args.get(0));
+    }
+
+    /**
+     * Adds a task
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void addTask(List<String> args) {
+        try {
+            taskList.addTask(args.get(0), args.get(1));
+        } catch (TaskList.ProjectNotFoundException e) {
+            out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Marks a task as completed
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void check(List<String> args) {
+        try {
+            long taskId = Long.parseLong(args.get(0));
+            taskList.check(taskId);
+        } catch (NumberFormatException e) {
+            out.println("Task ID \"%s\" is not a valid number".formatted(args.get(0)));
+        } catch (TaskList.TaskNotFoundException e) {
+            out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Marks a task as not completed
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void uncheck(List<String> args) {
+        try {
+            long taskId = Long.parseLong(args.get(0));
+            taskList.uncheck(taskId);
+        } catch (NumberFormatException e) {
+            out.println("Task ID \"%s\" is not a valid number".formatted(args.get(0)));
+        } catch (TaskList.TaskNotFoundException e) {
+            out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Sets the deadline of a task
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void deadline(List<String> args) {
+        try {
+            long taskId = Long.parseLong(args.get(0));
+            LocalDate date = LocalDate.parse(args.get(1), DATE_FORMATTER);
+            taskList.setDeadline(taskId, date);
+        } catch (NumberFormatException e) {
+            out.println("Task ID \"%s\" is not a valid number".formatted(args.get(0)));
+        } catch (TaskList.TaskNotFoundException e) {
+            out.println(e.getMessage());
+        } catch (DateTimeParseException e) {
+            out.println("\"%s\" is not a valid date of the form <DD-MM-YYYY>");
+        }
+    }
+
+    /**
+     * Views the deadline of all tasks
+     * @param args A list containing the arguments after the primary command (For commands with no parameters this is empty)
+     */
+    private void viewByDeadline(List<String> args) {
         try {
             SequencedMap<LocalDate, List<Long>> deadlines = taskList.getDeadlines();
             for (LocalDate deadline : deadlines.sequencedKeySet()) {
@@ -200,21 +229,6 @@ public class TaskListCLI implements Runnable {
             throw new RuntimeException("TaskList.getDeadlines() listed a task that doesnt exist." +
                     "This should never happen.", e);
         }
-    }
-
-    /**
-     * Prints helpful information about the commands available to the output stream (usually the console)
-     */
-    private void help() {
-        out.println("Commands:");
-        out.println("  show");
-        out.println("  add project <project name>");
-        out.println("  add task <project name> <task description>");
-        out.println("  check <task ID>");
-        out.println("  uncheck <task ID>");
-        out.println("  deadline <task ID> <DD-MM-YYYY>");
-        out.println("  view-by-deadline");
-        out.println();
     }
 
     /**
