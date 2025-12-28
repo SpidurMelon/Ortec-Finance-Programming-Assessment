@@ -1,5 +1,7 @@
 package com.ortecfinance.tasklist;
 
+import org.springframework.stereotype.Component;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +13,7 @@ import java.util.*;
  * A TaskList is a data structure representing a To-Do list of projects.
  * Projects are uniquely identified by their name and are further subdivided into tasks.
  */
+@Component
 public final class TaskList {
     public static final class ProjectNotFoundException extends Exception {
         public ProjectNotFoundException(String project) {
@@ -23,8 +26,8 @@ public final class TaskList {
         }
     }
 
-    private final Map<String, Project> projects;
-    private final Map<Long, Task> tasksById;
+    private final SequencedMap<String, Project> projects;
+    private final SequencedMap<Long, Task> tasksById;
     private final TreeMap<LocalDate, List<Task>> tasksByDeadline;
     private long lastId = 0;
 
@@ -32,7 +35,7 @@ public final class TaskList {
         this(new LinkedHashMap<>(), new LinkedHashMap<>());
     }
 
-    public TaskList(Map<String, Project> projects, Map<Long, Task> tasksById) {
+    public TaskList(SequencedMap<String, Project> projects, SequencedMap<Long, Task> tasksById) {
         this(
                 projects,
                 tasksById,
@@ -43,7 +46,7 @@ public final class TaskList {
         );
     }
 
-    public TaskList(Map<String, Project> projects, Map<Long, Task> tasksById, TreeMap<LocalDate, List<Task>> tasksByDeadline) {
+    public TaskList(SequencedMap<String, Project> projects, SequencedMap<Long, Task> tasksById, TreeMap<LocalDate, List<Task>> tasksByDeadline) {
         this.tasksById = tasksById;
         this.projects = projects;
         this.tasksByDeadline = tasksByDeadline;
@@ -60,8 +63,8 @@ public final class TaskList {
     /**
      * @return A set of all projects
      */
-    public Set<String> getProjects() {
-        return projects.keySet();
+    public SequencedSet<String> getProjects() {
+        return projects.sequencedKeySet();
     }
 
     /**

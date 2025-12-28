@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public final class TaskListTest {
 
     private TaskList taskList;
-    private Map<String, Project> projects;
-    private Map<Long, Task> tasksById;
+    private SequencedMap<String, Project> projects;
+    private SequencedMap<Long, Task> tasksById;
     private TreeMap<LocalDate, List<Task>> tasksByDeadline;
 
     @BeforeEach

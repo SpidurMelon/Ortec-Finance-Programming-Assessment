@@ -1,0 +1,12 @@
+### Get projects
+GET localhost:8080/projects
+
+### Add "Book" project
+POST localhost:8080/projects
+
+Book
+
+### Add "Cleaning" project
+POST localhost:8080/projects
+
+Cleaning
